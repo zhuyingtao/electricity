@@ -6,13 +6,7 @@ var map;
 
 
 var wgs84Sphere = new ol.Sphere(6378137);
-
-var raster = new ol.layer.Tile({
-    source: new ol.source.MapQuest({layer: 'sat'})
-});
-
 var source = new ol.source.Vector();
-
 var vector = new ol.layer.Vector({
     source: source,
     style: new ol.style.Style({
@@ -44,13 +38,13 @@ function init() {
         }),
         layers: [new ol.layer.Tile({
             source: new ol.source.OSM()
-        }), vector]
+        })]
     });
 
-    map.on('pointermove', pointerMoveHandler);
-    $(map.getViewport()).on('mouseout', function () {
-        $(helpTooltipElement).addClass('hidden');
-    });
+
+    //$(map.getViewport()).on('mouseout', function () {
+    //    $(helpTooltipElement).addClass('hidden');
+    //});
 }
 
 function showMap() {
@@ -67,50 +61,17 @@ function showMap() {
     }
 }
 
-
-/**
- * Currently drawn feature.
- * @type {ol.Feature}
- */
 var sketch;
 
-
-/**
- * The help tooltip element.
- * @type {Element}
- */
 var helpTooltipElement;
-
-
-/**
- * Overlay to show the help messages.
- * @type {ol.Overlay}
- */
 var helpTooltip;
 
-
-/**
- * The measure tooltip element.
- * @type {Element}
- */
 var measureTooltipElement;
-
-
-/**
- * Overlay to show the measurement.
- * @type {ol.Overlay}
- */
 var measureTooltip;
-
 
 var continuePolygonMsg = 'Click to continue drawing the polygon';
 var continueLineMsg = 'Click to continue drawing the line';
 
-
-/**
- * Handle pointer move.
- * @param {ol.MapBrowserEvent} evt
- */
 var pointerMoveHandler = function (evt) {
     if (evt.dragging) {
         return;
@@ -143,7 +104,7 @@ function addInteraction() {
     var type = 'LineString';
     draw = new ol.interaction.Draw({
         source: source,
-        type: /** @type {ol.geom.GeometryType} */ (type),
+        type: (type),
         style: new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgba(255, 255, 255, 0.2)'
@@ -172,20 +133,18 @@ function addInteraction() {
     var listener;
     draw.on('drawstart',
         function (evt) {
-            // set sketch
             sketch = evt.feature;
 
-            /** @type {ol.Coordinate|undefined} */
             var tooltipCoord = evt.coordinate;
 
             listener = sketch.getGeometry().on('change', function (evt) {
                 var geom = evt.target;
                 var output;
                 if (geom instanceof ol.geom.Polygon) {
-                    output = formatArea(/** @type {ol.geom.Polygon} */ (geom));
+                    output = formatArea((geom));
                     tooltipCoord = geom.getInteriorPoint().getCoordinates();
                 } else if (geom instanceof ol.geom.LineString) {
-                    output = formatLength(/** @type {ol.geom.LineString} */ (geom));
+                    output = formatLength((geom));
                     tooltipCoord = geom.getLastCoordinate();
                 }
                 measureTooltipElement.innerHTML = output;
@@ -206,10 +165,6 @@ function addInteraction() {
         }, this);
 }
 
-
-/**
- * Creates a new help tooltip
- */
 function createHelpTooltip() {
     if (helpTooltipElement) {
         helpTooltipElement.parentNode.removeChild(helpTooltipElement);
@@ -224,9 +179,6 @@ function createHelpTooltip() {
     map.addOverlay(helpTooltip);
 }
 
-/**
- * Creates a new measure tooltip
- */
 function createMeasureTooltip() {
     if (measureTooltipElement) {
         measureTooltipElement.parentNode.removeChild(measureTooltipElement);
@@ -241,11 +193,6 @@ function createMeasureTooltip() {
     map.addOverlay(measureTooltip);
 }
 
-/**
- * format length output
- * @param {ol.geom.LineString} line
- * @return {string}
- */
 var formatLength = function (line) {
     var length;
     if (geodesicCheckbox.checked) {
@@ -270,12 +217,6 @@ var formatLength = function (line) {
     }
     return output;
 };
-
-/**
- * format length output
- * @param {ol.geom.Polygon} polygon
- * @return {string}
- */
 var formatArea = function (polygon) {
     var area;
     if (geodesicCheckbox.checked) {
@@ -300,10 +241,16 @@ var formatArea = function (polygon) {
 
 function toggleControl(element) {
     if (element.name == "distance") {
+        map.addLayer(vector);
+        map.on('pointermove', pointerMoveHandler);
         addInteraction();
     } else if (element.name == "search") {
         map.removeInteraction(draw);
+        vector.clearData();
+        map.removeLayer(vector);
+        helpTooltipElement.innerHTML = null;
         map.on('pointermove', null);
+        $(helpTooltipElement).addClass('hidden');
     }
 }
 
