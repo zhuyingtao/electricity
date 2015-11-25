@@ -41,6 +41,9 @@ function init() {
         })]
     });
 
+    markers = new ol.Layer.Markers("Markers");
+    map.addLayer(markers);
+
 
     //$(map.getViewport()).on('mouseout', function () {
     //    $(helpTooltipElement).addClass('hidden');
@@ -251,6 +254,28 @@ function toggleControl(element) {
         helpTooltipElement.innerHTML = null;
         map.on('pointermove', null);
         $(helpTooltipElement).addClass('hidden');
+    } else if (element.name == "marker" ) {
+        addMarker();
     }
 }
 
+var markers;
+//显示标注
+var marker1;
+function addMarker() {
+    var url = './img/small.jpg';
+    var sz = new ol.Size(20, 20);  //尺寸大小
+    var calculateOffset = function (size) {
+        return new ol.Pixel(-(size.w / 2), -size.h);
+    };
+    var icon = new ol.Icon(url, sz, null, calculateOffset);
+
+    marker1 = new ol.Marker(new ol.LonLat(48, 31), icon);
+    markers.addMarker(marker1);
+
+    // marker = new OpenLayers.Marker(madrid, icon.clone());
+    // markers.addMarker(marker);
+}
+function removeMarker() {
+    markers.removeMarker(marker1);
+}
