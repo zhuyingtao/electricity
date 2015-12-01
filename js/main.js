@@ -26,6 +26,14 @@ var vector = new ol.layer.Vector({
     })
 });
 
+var wms = new ol.layer.Tile({
+    source: new ol.source.TileWMS({
+        url: 'http://localhost:8080/geoserver/test/wms',
+        params: {'LAYERS': 'test:test', 'TILED': true},
+        serverType: 'geoserver'
+    })
+});
+
 function init() {
     map = new ol.Map({
         target: 'map',
@@ -33,17 +41,12 @@ function init() {
         view: new ol.View({
             projection: 'EPSG:900913',
             center: [12608571.1779, 2645192.24241], //guangzhou
-            /*center:[-8015003.33712,4160979.44405]*/
             zoom: 10
         }),
         layers: [new ol.layer.Tile({
             source: new ol.source.OSM()
         })]
     });
-
-    markers = new ol.Layer.Markers("Markers");
-    map.addLayer(markers);
-
 
     //$(map.getViewport()).on('mouseout', function () {
     //    $(helpTooltipElement).addClass('hidden');
@@ -61,6 +64,18 @@ function showMap() {
     else {
         map2.display = "";
         map.display = "none";
+    }
+}
+
+
+var isShowWMS = false;
+function showWMS() {
+    if (!isShowWMS) {
+        map.addLayer(wms);
+        isShowWMS = true;
+    } else {
+        map.removeLayer(wms);
+        isShowWMS = false;
     }
 }
 
@@ -254,7 +269,7 @@ function toggleControl(element) {
         helpTooltipElement.innerHTML = null;
         map.on('pointermove', null);
         $(helpTooltipElement).addClass('hidden');
-    } else if (element.name == "marker" ) {
+    } else if (element.name == "marker") {
         addMarker();
     }
 }
@@ -263,18 +278,29 @@ var markers;
 //显示标注
 var marker1;
 function addMarker() {
-    var url = './img/small.jpg';
-    var sz = new ol.Size(20, 20);  //尺寸大小
-    var calculateOffset = function (size) {
-        return new ol.Pixel(-(size.w / 2), -size.h);
-    };
-    var icon = new ol.Icon(url, sz, null, calculateOffset);
+    var source = new ol.source.Vector({
+        url: '/data/layers/7day-M2.5.json',
+        format: new ol.format.GeoJSON()
+    });
+    var draw = new ol.interaction.Draw({
+        source: source,
+        type: 'Point'
+    });
 
-    marker1 = new ol.Marker(new ol.LonLat(48, 31), icon);
-    markers.addMarker(marker1);
-
-    // marker = new OpenLayers.Marker(madrid, icon.clone());
-    // markers.addMarker(marker);
+    var vector = new ol.layer.Vector({
+        source: source,
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 5,
+                fill: new ol.style.Fill({
+                    color: '#0000FF'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#000000'
+                })
+            })
+        })
+    })
 }
 function removeMarker() {
     markers.removeMarker(marker1);
